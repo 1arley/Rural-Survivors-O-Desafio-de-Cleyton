@@ -1,68 +1,15 @@
-import pygame, sys
+import pygame
+import sys
+import random
 from settings import *
-from player import Player
-from enemy import Enemy
-from random import choice, randint
-
-class CameraGroup(pygame.sprite.Group):
-    def __init__(self):
-        super().__init__()
-        self.display_surface = pygame.display.get_surface()
-        self.offset = pygame.math.Vector2()
-        
-        self.bg_surf = pygame.image.load('assets/background.png').convert()
-        self.bg_rect = self.bg_surf.get_rect(topleft=(0,0))
-        
-        # FIX: Pega o tamanho REAL da imagem em vez de confiar no settings
-        self.bg_w = self.bg_surf.get_width()
-        self.bg_h = self.bg_surf.get_height()
-
-    def custom_draw(self, player):
-        self.offset.x = player.rect.centerx - WIDTH / 2
-        self.offset.y = player.rect.centery - HEIGHT / 2
-
-        # --- FIX DO BACKGROUND (Agora calcula matematicamente) ---
-        bg_w = self.bg_surf.get_width()
-        bg_h = self.bg_surf.get_height()
-
-        # Calcula a posição inicial do grid (arredondando para o tile mais próximo)
-        start_col = int(self.offset.x // bg_w)
-        start_row = int(self.offset.y // bg_h)
-        
-        # Calcula QUANTOS tiles cabem na tela (+ 2 de margem pra garantir)
-        # O int() + 1 arredonda pra cima pra não faltar pedaço
-        num_cols = (WIDTH // bg_w) + 2
-        num_rows = (HEIGHT // bg_h) + 2
-        
-        # Desenha apenas os tiles visíveis
-        for col in range(start_col - 1, start_col + num_cols):
-            for row in range(start_row - 1, start_row + num_rows):
-                x = col * bg_w
-                y = row * bg_h
-                pos = (x - self.offset.x, y - self.offset.y)
-                self.display_surface.blit(self.bg_surf, pos)
-
-        # --- FIM DO FIX ---
-
-        # Desenha os Sprites (essa parte continua igual)
-        for sprite in sorted(self.sprites(), key=lambda s: s.rect.centery):
-            offset_pos = sprite.rect.topleft - self.offset
-            self.display_surface.blit(sprite.image, offset_pos)
-            
-            # (Mantém o código da UI/Barras aqui...)
-            if hasattr(sprite, 'draw_ui'):
-                 # ... código das barras de vida/xp ...
-                 # (Se quiser, posso reenviar esse trecho, mas é só manter o que já tinha)
-                 ui_x = offset_pos[0] + sprite.image.get_width() // 2 - 30
-                 ui_y = offset_pos[1] + sprite.image.get_height() + 10
-                 
-                 pygame.draw.rect(self.display_surface, BLACK, (ui_x, ui_y, 60, 10))
-                 ratio = max(0, sprite.health) / sprite.max_health
-                 pygame.draw.rect(self.display_surface, RED, (ui_x, ui_y, 60 * ratio, 10))
-                 
-                 xp_ratio = sprite.xp / sprite.next_level_xp
-                 pygame.draw.rect(self.display_surface, BLACK, (ui_x, ui_y + 12, 60, 5))
-                 pygame.draw.rect(self.display_surface, BLUE, (ui_x, ui_y + 12, 60 * xp_ratio, 5))
+from src.utils.helpers import AssetManager, import_json
+from src.entities.player import Player
+from src.entities.enemy import Enemy
+from src.weapons.weapon import WeaponController
+from src.ui.hud import UI
+from src.systems.camera import CameraGroup
+from src.items.xp_orb import ExperienceGem
+from src.systems.progression import EvolutionSystem
 
 class Game:
     def __init__(self):
@@ -70,140 +17,169 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font(None, 40)
         self.running = True
-
-    def create_sprites(self):
-        # Usa o grupo de câmera agora
-        self.all_sprites = CameraGroup()
-        self.enemies = pygame.sprite.Group() 
-        self.xp_group = pygame.sprite.Group()
-
-        # O player nasce no 0,0 do mundo (mas a câmera vai centralizar ele)
-        self.player = Player((0, 0), [self.all_sprites], self.enemies, self.xp_group)
+        self.font = pygame.font.Font(None, 40)
         
-        # Timer de spawn
-        self.spawn_timer = pygame.time.get_ticks()
+        self.balance_data = import_json('data/balance.json')
+
+        self.all_sprites = CameraGroup() 
+        self.enemy_sprites = pygame.sprite.Group()
+        self.attack_sprites = pygame.sprite.Group()
+        self.xp_sprites = pygame.sprite.Group()
+        
+        self.groups = {
+            'all_sprites': self.all_sprites,
+            'enemy_sprites': self.enemy_sprites,
+            'attack_sprites': self.attack_sprites,
+            'xp_sprites': self.xp_sprites
+        }
+        
+        self.player = Player((WIDTH//2, HEIGHT//2), [self.all_sprites], None, None, None)
+        
+        # Simulando passivos para testar evolução (em um jogo real, você pegaria no level up)
+        self.player.passives = [{'name': 'Calculadora', 'level': 6}] 
+        
+        self.weapon_controller = WeaponController(self.player, self.groups)
+        self.weapon_controller.add_weapon('caderno')
+        # Hack para testar evolução rápido:
+        self.weapon_controller.weapons_data['caderno']['lvl'] = 8 
+        
+        self.ui = UI()
+        self.evolution_system = EvolutionSystem() # Instancia o sistema
+        
+        self.start_time = pygame.time.get_ticks()
+        self.enemy_timer = 0
+        self.enemy_spawn_rate = 1000
+        self.state = 'playing' # 'playing', 'level_up', 'game_over'
 
     def spawn_enemy(self):
-        current_time = pygame.time.get_ticks()
-        if current_time - self.spawn_timer > ENEMY_SPAWN_TIME:
-            self.spawn_timer = current_time
-            
-            # Spawna inimigo num raio fora da tela (entre 700 e 900 de distancia)
-            dist = randint(700, 900)
-            angle = randint(0, 360)
-            
-            # Matemática pra achar o x,y baseado no angulo
-            import math
-            spawn_x = self.player.rect.centerx + dist * math.cos(math.radians(angle))
-            spawn_y = self.player.rect.centery + dist * math.sin(math.radians(angle))
-            
-            Enemy((spawn_x, spawn_y), [self.all_sprites, self.enemies], self.player, self.xp_group)
+        # Spawna nas bordas da tela
+        side = random.choice(['top', 'bottom', 'left', 'right'])
+        if side == 'top': pos = (random.randint(0, WIDTH), -50)
+        elif side == 'bottom': pos = (random.randint(0, WIDTH), HEIGHT + 50)
+        elif side == 'left': pos = (-50, random.randint(0, HEIGHT))
+        else: pos = (WIDTH + 50, random.randint(0, HEIGHT))
+        
+        # Define tipo baseado no tempo
+        minutes = (pygame.time.get_ticks() - self.start_time) / 60000
+        enemy_type = 'prazo_curto'
+        if minutes > 1: enemy_type = 'trabalho_grupo'
+        if minutes > 3: enemy_type = 'prova_final'
+        
+        stats = self.balance_data['enemies'][enemy_type]
+        Enemy(enemy_type, pos, [self.all_sprites, self.enemy_sprites], self.player, stats)
 
     def check_collisions(self):
-        # Dano do Inimigo no Player
-        hits = pygame.sprite.spritecollide(self.player, self.enemies, False)
-        if hits:
-            self.player.take_damage(10)
+        # Ataques vs Inimigos
+        hits = pygame.sprite.groupcollide(self.enemy_sprites, self.attack_sprites, False, False)
+        for enemy, attacks in hits.items():
+            for attack in attacks:
+                enemy.health -= attack.damage
             
-        # Projetil acertando inimigo
-        # Como projetil tá no all_sprites, a gente precisa filtrar
-        projectiles = [s for s in self.all_sprites if hasattr(s, 'damage')]
-        
-        for p in projectiles:
-            hit_enemies = pygame.sprite.spritecollide(p, self.enemies, False)
-            if hit_enemies:
-                for e in hit_enemies:
-                    e.take_damage(p.damage)
-                p.kill() # Bala some ao bater
+            if enemy.health <= 0:
+                # CORREÇÃO AQUI: Passar self.player como argumento
+                ExperienceGem(enemy.rect.center, enemy.xp_value, [self.all_sprites, self.xp_sprites], self.player)
+                enemy.kill()
 
-    def draw_text(self, text, size, color, x, y):
-        font = pygame.font.Font(None, size)
-        text_surface = font.render(text, True, color)
-        text_rect = text_surface.get_rect(midtop=(x, y))
-        self.screen.blit(text_surface, text_rect)
+        # Inimigos vs Player
+        hits = pygame.sprite.spritecollide(self.player, self.enemy_sprites, False)
+        for enemy in hits:
+            self.player.health -= 0.5
+            if self.player.health <= 0:
+                self.state = 'game_over'
+                
+        # Inimigos vs Player
+        hits = pygame.sprite.spritecollide(self.player, self.enemy_sprites, False)
+        for enemy in hits:
+            self.player.health -= 0.5 # Dano de contato contínuo
+            if self.player.health <= 0:
+                self.state = 'game_over'
+
+    def draw_level_up_screen(self):
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 200))
+        self.screen.blit(overlay, (0,0))
+        
+        text = self.font.render("CONHECIMENTO ADQUIRIDO! (Escolha: 1, 2 ou 3)", True, (255, 255, 255))
+        rect = text.get_rect(center=(WIDTH//2, 100))
+        self.screen.blit(text, rect)
+        
+        # Placeholder para opções (usaria botões reais aqui)
+        options = [
+            "1. Melhorar Caderno",
+            "2. Adicionar Caneta",
+            "3. Café Forte (+Speed)"
+        ]
+        for i, opt in enumerate(options):
+            opt_surf = self.font.render(opt, True, (255, 255, 0))
+            self.screen.blit(opt_surf, (WIDTH//2 - 100, 250 + i*60))
 
     def run(self):
-        self.playing = True
-        while self.playing:
-            self.clock.tick(FPS)
-            self.events()
-            self.update()
-            self.draw()
-
-    def events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.playing = False
-                self.running = False
-
-    def update(self):
-        self.all_sprites.update()
-        self.spawn_enemy()
-        self.check_collisions()
-        
-        if not self.player.alive():
-            self.playing = False 
-
-    def draw(self):
-        self.screen.fill(BLACK)
-        
-        # Chama o draw customizado da câmera passando o player como foco
-        self.all_sprites.custom_draw(self.player)
-        
-        # UI Fixa na tela (Score, Level)
-        self.draw_text(f"Level: {self.player.level}", 30, WHITE, 60, 20)
-        
-        pygame.display.flip()
-
-    def show_start_screen(self):
-        self.screen.fill(BLACK)
-        self.draw_text(TITLE, 60, WHITE, WIDTH / 2, HEIGHT / 4)
-        self.draw_text("Sobreviva à UFRPE!", 30, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.draw_text("WASD move | O personagem atira sozinho", 25, WHITE, WIDTH / 2, HEIGHT / 2 + 40)
-        self.draw_text("[ENTER] para começar", 30, RED, WIDTH / 2, HEIGHT * 3 / 4)
-        pygame.display.flip()
-        self.wait_for_key()
-
-    def show_go_screen(self):
-        if not self.running: return
-        self.screen.fill(BLACK)
-        self.draw_text("REPROVADO PELO CLEYTON", 60, RED, WIDTH / 2, HEIGHT / 4)
-        self.draw_text(f"Nível alcançado: {self.player.level}", 40, WHITE, WIDTH / 2, HEIGHT / 2)
-        self.draw_text("[R] Tentar de novo | [ESC] Menu", 30, WHITE, WIDTH / 2, HEIGHT * 3 / 4)
-        pygame.display.flip()
-        
-        waiting = True
-        while waiting:
-            self.clock.tick(FPS)
+        while self.running:
+            dt = self.clock.tick(FPS) / 1000.0
+            current_time = pygame.time.get_ticks() - self.start_time
+            
+            # Event Handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    waiting = False
                     self.running = False
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_r: waiting = False
-                    elif event.key == pygame.K_ESCAPE:
-                        waiting = False
-                        self.show_start_screen()
+                
+                if self.state == 'level_up':
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_1:
+                            self.weapon_controller.weapons_data['caderno']['damage'] += 5
+                            self.state = 'playing'
+                        elif event.key == pygame.K_2:
+                            self.weapon_controller.add_weapon('caneta')
+                            self.state = 'playing'
+                        elif event.key == pygame.K_3:
+                            self.player.stats['speed'] += 20
+                            self.state = 'playing'
 
-    def wait_for_key(self):
-        waiting = True
-        while waiting:
-            self.clock.tick(FPS)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    waiting = False
-                    self.running = False
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_RETURN: waiting = False
+            # Logic
+            if self.state == 'playing':
+                # Spawn Enemies
+                if pygame.time.get_ticks() - self.enemy_timer > self.enemy_spawn_rate:
+                    self.spawn_enemy()
+                    self.enemy_timer = pygame.time.get_ticks()
+                    # Acelera o spawn com o tempo
+                    self.enemy_spawn_rate = max(200, 1000 - (current_time / 1000))
+
+                self.all_sprites.update(dt)
+                self.weapon_controller.update()
+                self.check_collisions()
+                
+                # Check Level Up (simplificado para exemplo)
+                if self.player.xp >= self.player.next_level_xp:
+                    self.player.level_up()
+                    self.state = 'level_up'
+
+            # Drawing
+            self.screen.fill(COLORS['bg'])
+            
+            # Draw Grid (efeito visual)
+            for x in range(0, WIDTH, TILE_SIZE):
+                pygame.draw.line(self.screen, COLORS['grid'], (x, 0), (x, HEIGHT))
+            for y in range(0, HEIGHT, TILE_SIZE):
+                pygame.draw.line(self.screen, COLORS['grid'], (0, y), (WIDTH, y))
+
+            # Draw All Sprites (na ordem correta seria via Câmera/Layer)
+            self.all_sprites.custom_draw(self.player)
+            
+            # UI
+            self.ui.display(self.player, pygame.time.get_ticks() - self.start_time)
+            
+            if self.state == 'level_up':
+                self.draw_level_up_screen()
+            elif self.state == 'game_over':
+                go_surf = self.font.render("REPROVADO POR FALTA!", True, (255, 0, 0))
+                go_rect = go_surf.get_rect(center=(WIDTH//2, HEIGHT//2))
+                self.screen.blit(go_surf, go_rect)
+
+            pygame.display.flip()
+
+        pygame.quit()
+        sys.exit()
 
 if __name__ == '__main__':
-    game = Game()
-    game.show_start_screen()
-    while game.running:
-        game.create_sprites()
-        game.run()
-        game.show_go_screen()
-    pygame.quit()
-    sys.exit()
+    Game().run()

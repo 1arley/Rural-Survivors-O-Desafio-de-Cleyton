@@ -1,0 +1,46 @@
+{
+    "characters": {
+        "calouro": {
+            "hp": 100, "speed": 200, "magnet": 150, "color": "player_calouro",
+            "name": "Calouro", "desc": "Equilibrado. Começa com Caderno."
+        },
+        "veterano": {
+            "hp": 150, "speed": 160, "magnet": 200, "color": "player_veterano",
+            "name": "Veterano", "desc": "+HP, -Speed. Começa com Caneta."
+        }
+    },
+    "weapons": {
+        "caderno": {
+            "damage": 10, "cooldown": 1000, "speed": 400, "life": 2000, "image": "proj_caderno",
+            "name": "Caderno", "desc": "Lança folhas."
+        },
+        "caneta": {
+            "damage": 15, "cooldown": 600, "speed": 600, "life": 3000, "image": "proj_caneta",
+            "name": "Caneta", "desc": "Tiro rápido."
+        },
+        "livro": {
+            "damage": 25, "cooldown": 1500, "speed": 300, "life": 5000, "image": "proj_caderno",
+            "name": "Livro Didático", "desc": "Lento e perfurante."
+        },
+        "calculadora": {
+            "damage": 40, "cooldown": 2000, "speed": 500, "life": 1500, "image": "proj_caneta",
+            "name": "Calculadora", "desc": "Alto dano."
+        }
+    },
+    "passives": {
+        "cafe": {"name": "Café", "stat": "speed", "value": 0.1, "desc": "+10% Velocidade"},
+        "oculos": {"name": "Óculos", "stat": "damage", "value": 0.1, "desc": "+10% Dano"},
+        "mochila": {"name": "Mochila", "stat": "xp_mult", "value": 0.1, "desc": "+10% Ganho XP"},
+        "cracha": {"name": "Crachá", "stat": "defense", "value": 1, "desc": "+1 Defesa"}
+    },
+    "enemies": {
+        "prazo_curto": {"hp": 10, "speed": 100, "damage": 5, "xp": 1},
+        "trabalho_grupo": {"hp": 5, "speed": 160, "damage": 3, "xp": 2},
+        "prova_final": {"hp": 50, "speed": 60, "damage": 10, "xp": 10},
+        "tcc": {"hp": 5000, "speed": 80, "damage": 30, "xp": 500}
+    },
+    "level_up": {
+        "base_xp": 5,
+        "multiplier": 1.2
+    }
+}
