@@ -1,0 +1,126 @@
+{
+    "characters": {
+        "calouro": {
+            "hp": 80, "speed": 200, "magnet": 150, "color": "player_calouro",
+            "name": "Calouro", "desc": "Básico. Começa com Caderno."
+        },
+        "veterano": {
+            "hp": 120, "speed": 160, "magnet": 200, "color": "player_veterano",
+            "name": "Veterano", "desc": "Tank. Começa com Cabo de Rede."
+        },
+        "monitor": {
+            "hp": 90, "speed": 180, "magnet": 180, "color": "player_monitor",
+            "name": "Monitor", "desc": "Área. Começa com Protocolo."
+        },
+        "pesquisador": {
+            "hp": 60, "speed": 220, "magnet": 300, "color": "player_pesquisador",
+            "name": "Pesquisador", "desc": "Coleta XP. Começa com Elétrons."
+        }
+    },
+    "weapons": {
+        "caderno": {
+            "type": "projectile", "name": "Caderno", "desc": "Média distância.",
+            "damage": 10, "cooldown": 900, "speed": 450, "life": 1500, "image": "proj_caderno",
+            "per_level": { "damage": 2, "amount": 0.5 }
+        },
+        "protocolo": {
+            "type": "projectile", "name": "Protocolo", "desc": "Bumerangue perfurante.",
+            "damage": 14, "cooldown": 1300, "speed": 750, "life": 1000, "image": "proj_protocolo",
+            "boomerang": true, "pierce": 999, "spin": true,
+            "per_level": { "damage": 3, "cooldown": -50 }
+        },
+        "regua": {
+            "type": "melee", "name": "Régua T", "desc": "Ataque frontal em cone.",
+            "damage": 15, "cooldown": 1000, "speed": 0, "life": 250, "area": 1.3, "image": "area_giz",
+            "per_level": { "damage": 3, "area": 0.1 }
+        },
+        "cafe_chao": {
+            "type": "projectile", "name": "Café Derramado", "desc": "Poça de lentidão.",
+            "damage": 3, "cooldown": 2500, "speed": 0, "life": 4000, "image": "proj_cafe_chao",
+            "persistent": true, "scale": 2.2, "slow": 0.6,
+            "per_level": { "damage": 1, "scale": 0.2, "life": 500 }
+        },
+        "eletrons": {
+            "type": "projectile", "name": "Elétrons Livres", "desc": "Escudo orbital.",
+            "damage": 5, "cooldown": 2000, "speed": 180, "life": 5000, "image": "proj",
+            "orbit": true, "persistent": true, "range": 130,
+            "per_level": { "damage": 2, "amount": 1 }
+        },
+        "curto_circuito": {
+            "type": "projectile", "name": "Curto Circuito", "desc": "Aleatório e rápido.",
+            "damage": 18, "cooldown": 800, "speed": 900, "life": 300, "image": "proj_caneta",
+            "random_aim": true,
+            "per_level": { "damage": 4, "amount": 1 }
+        },
+        "molotov_quimica": {
+            "type": "projectile", "name": "Tubo de Ensaio", "desc": "Fogo persistente.",
+            "damage": 8, "cooldown": 1600, "speed": 400, "life": 1000, "image": "proj_area_fogo",
+            "burn_damage": 3, "burn_duration": 3000, "persistent": true, "scale": 2.0,
+            "per_level": { "damage": 2, "burn_damage": 1 }
+        },
+        "lapis_b": {
+            "type": "projectile", "name": "Lápis 6B", "desc": "Perfura inimigos.",
+            "damage": 12, "cooldown": 1100, "speed": 600, "life": 3000, "image": "proj",
+            "pierce": 3, "damage_decay": 0.15,
+            "per_level": { "damage": 2, "pierce": 1 }
+        },
+        "cabo_rede": {
+            "type": "melee", "name": "Cabo de Rede", "desc": "Chicote lateral.",
+            "damage": 14, "cooldown": 900, "speed": 0, "life": 200, "area": 1.6, "image": "whip_sprite",
+            "per_level": { "damage": 3, "area": 0.1 }
+        },
+        "roteador": {
+            "type": "aura", "name": "Roteador Wi-Fi", "desc": "Dano em área constante.",
+            "damage": 3, "cooldown": 400, "speed": 0, "area": 1.6, "image": "area_giz",
+            "per_level": { "damage": 1, "area": 0.15 }
+        },
+        "livro_calculo": {
+            "type": "projectile", "name": "Livro de Cálculo", "desc": "Lento e esmagador.",
+            "damage": 40, "cooldown": 2000, "speed": 250, "life": 1500, "image": "proj_caderno",
+            "per_level": { "damage": 8, "scale": 0.1 }
+        },
+        "projetor": {
+            "type": "projectile", "name": "Projetor Quebrado", "desc": "Metralhadora fraca.",
+            "damage": 6, "cooldown": 500, "speed": 800, "life": 800, "image": "proj",
+            "per_level": { "damage": 1, "cooldown": -20 }
+        },
+        "ventilador": {
+            "type": "aura", "name": "Ventilador Barulhento", "desc": "Controle de grupo.",
+            "damage": 1, "cooldown": 300, "speed": 0, "area": 2.2, "image": "area_giz",
+            "slow": 0.5,
+            "per_level": { "area": 0.2, "damage": 1 }
+        }
+    },
+    "passives": {
+        "tenis": {"name": "Tênis", "stat": "speed", "value": 0.10, "desc": "+10% Velocidade"},
+        "energetico": {"name": "Energético", "stat": "cooldown", "value": -0.05, "desc": "-5% Cooldown"},
+        "oculos": {"name": "Óculos", "stat": "damage", "value": 0.10, "desc": "+10% Dano"},
+        "matricula": {"name": "Matrícula", "stat": "evasion", "value": 5, "desc": "+5% Esquiva"},
+        "bolsa": {"name": "Bolsa", "stat": "gold_gain", "value": 0.15, "desc": "+15% Créditos"},
+        "marmita": {"name": "Marmita", "stat": "max_hp", "value": 20, "desc": "+20 Vida Máx"},
+        "argumento": {"name": "Argumento", "stat": "knockback", "value": 0.15, "desc": "+15% Empurrão"},
+        "caneta_vermelha": {"name": "Crítico", "stat": "crit_chance", "value": 5, "desc": "+5% Crítico"},
+        "internet": {"name": "Internet", "stat": "proj_speed", "value": 0.10, "desc": "+10% Vel. Projétil"},
+        "rede": {"name": "Rede", "stat": "regen", "value": 0.5, "desc": "+0.5 Vida/seg"},
+        "cracha": {"name": "Crachá", "stat": "armor", "value": 1, "desc": "+1 Armadura"},
+        "megafone": {"name": "Megafone", "stat": "area", "value": 0.10, "desc": "+10% Tamanho"},
+        "ima": {"name": "Networking", "stat": "magnet", "value": 0.50, "desc": "+50% Coleta"},
+        "cafe_forte": {"name": "Café", "stat": "duration", "value": 0.15, "desc": "+15% Duração"},
+        "xerox": {"name": "Xerox", "stat": "amount", "value": 1, "desc": "+1 Projétil"},
+        "mochila": {"name": "Mochila", "stat": "xp_mult", "value": 0.10, "desc": "+10% Ganho XP"}
+    },
+    "enemies": {
+        "lista_exercicio": {"hp": 10, "speed": 95, "damage": 10, "xp": 1},
+        "seminario": {"hp": 25, "speed": 115, "damage": 15, "xp": 2},
+        "gato_campus": {"hp": 8, "speed": 180, "damage": 12, "xp": 3},
+        "onibus_lotado": {"hp": 100, "speed": 60, "damage": 25, "xp": 8},
+        "ead": { "hp": 30, "speed": 105, "damage": 15, "xp": 5, "behavior": "ranged", "attack_range": 300, "attack_cooldown": 2000 },
+        "banca": {"hp": 800, "speed": 85, "damage": 30, "xp": 100, "scale": 1.5, "is_boss": true},
+        "coordenador": {"hp": 2500, "speed": 95, "damage": 40, "xp": 300, "scale": 2.0, "is_boss": true},
+        "reitoria": {"hp": 8000, "speed": 110, "damage": 60, "xp": 1000, "scale": 2.5, "is_boss": true}
+    },
+    "level_up": {
+        "base_xp": 10,
+        "multiplier": 1.25
+    }
+}
