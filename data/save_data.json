@@ -1,9 +1,9 @@
 {
-    "credits": 13,
+    "credits": 0,
     "upgrades": {
         "max_hp": 2,
         "damage": 2,
-        "speed": 0,
+        "speed": 1,
         "xp_gain": 0,
         "gold_gain": 0
     }

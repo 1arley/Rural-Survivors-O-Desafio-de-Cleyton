@@ -88,20 +88,46 @@ class Game:
         self.state = 'playing'
 
     def spawn_enemy(self, enemy_type=None):
+        # Garante que o player existe para pegar a posição dele
+        if not hasattr(self, 'player') or not self.player:
+            return
+
         side = random.choice(['top', 'bottom', 'left', 'right'])
         offset = 50 
         
-        if side == 'top': pos = (random.randint(0, WIDTH), -offset)
-        elif side == 'bottom': pos = (random.randint(0, WIDTH), HEIGHT + offset)
-        elif side == 'left': pos = (-offset, random.randint(0, HEIGHT))
-        else: pos = (WIDTH + offset, random.randint(0, HEIGHT))
+        # Pega a posição central do jogador no mundo
+        px, py = self.player.rect.center
+        
+        # Calcula as bordas da visão (Câmera) baseadas no Player
+        # (WIDTH e HEIGHT vêm do settings.py)
+        camera_left = px - (WIDTH // 2)
+        camera_right = px + (WIDTH // 2)
+        camera_top = py - (HEIGHT // 2)
+        camera_bottom = py + (HEIGHT // 2)
+
+        # Gera coordenadas RELATIVAS à câmera atual
+        if side == 'top':
+            x = random.randint(int(camera_left), int(camera_right))
+            y = int(camera_top - offset)
+            pos = (x, y)
+        elif side == 'bottom':
+            x = random.randint(int(camera_left), int(camera_right))
+            y = int(camera_bottom + offset)
+            pos = (x, y)
+        elif side == 'left':
+            x = int(camera_left - offset)
+            y = random.randint(int(camera_top), int(camera_bottom))
+            pos = (x, y)
+        else: # right
+            x = int(camera_right + offset)
+            y = random.randint(int(camera_top), int(camera_bottom))
+            pos = (x, y)
         
         if not enemy_type: enemy_type = 'lista_exercicio'
         
         if enemy_type in self.balance_data['enemies']:
             stats = self.balance_data['enemies'][enemy_type]
             is_elite = False
-            # Chance de 5% de ser Elite (exceto Bosses)
             if not stats.get('is_boss', False) and random.random() < 0.05:
                 is_elite = True
             
@@ -269,7 +295,7 @@ class Game:
 
                 self.all_sprites.update(dt)
                 self.weapon_controller.update()
-                self.check_collisions()
+                self.check_collisions() 
                 
                 if self.player.xp >= self.player.next_level_xp:
                     self.player.level_up()
@@ -285,9 +311,14 @@ class Game:
                 self.all_sprites.custom_draw(self.player)
                 self.ui.display(self.player, self.game_time)
                 action = self.pause_menu.handle_input()
-                if action == 'resume': self.state = 'playing'
-                elif action == 'main_menu': self.state = 'main_menu'
-                elif action == 'quit_game': self.running = False
+                if action == 'resume': 
+                    self.state = 'playing'
+                elif action == 'main_menu': 
+                    self.save_manager.add_credits(self.player.credits)
+                    self.state = 'main_menu'
+                elif action == 'quit_game': 
+                    self.save_manager.add_credits(self.player.credits)
+                    self.running = False
                 self.pause_menu.draw()
 
             if self.state == 'level_up':

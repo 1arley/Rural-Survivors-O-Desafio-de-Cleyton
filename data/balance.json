@@ -25,14 +25,15 @@
         },
         "protocolo": {
             "type": "projectile", "name": "Protocolo", "desc": "Bumerangue perfurante.",
-            "damage": 14, "cooldown": 1300, "speed": 750, "life": 1000, "image": "proj_protocolo",
+            "damage": 8, "cooldown": 1300, "speed": 750, "life": 1000, "image": "proj_protocolo",
             "boomerang": true, "pierce": 999, "spin": true,
             "per_level": { "damage": 3, "cooldown": -50 }
         },
-        "regua": {
-            "type": "melee", "name": "Régua T", "desc": "Ataque frontal em cone.",
-            "damage": 15, "cooldown": 1000, "speed": 0, "life": 250, "area": 1.3, "image": "area_giz",
-            "per_level": { "damage": 3, "area": 0.1 }
+        "estilete": {
+        "type": "projectile", "name": "Estilete", "desc": "Dispara lâminas rápidas.",
+        "damage": 3, "cooldown": 200, "speed": 900, "life": 1000, "image": "proj_estilete",
+        "amount": 1, "knockback": 0.2,
+        "per_level": { "damage": 2, "amount": 1 }
         },
         "cafe_chao": {
             "type": "projectile", "name": "Café Derramado", "desc": "Poça de lentidão.",
@@ -60,7 +61,7 @@
         },
         "lapis_b": {
             "type": "projectile", "name": "Lápis 6B", "desc": "Perfura inimigos.",
-            "damage": 12, "cooldown": 1100, "speed": 600, "life": 3000, "image": "proj",
+            "damage": 12, "cooldown": 1100, "speed": 600, "life": 1000, "image": "proj",
             "pierce": 3, "damage_decay": 0.15,
             "per_level": { "damage": 2, "pierce": 1 }
         },
@@ -87,7 +88,7 @@
         "ventilador": {
             "type": "aura", "name": "Ventilador Barulhento", "desc": "Controle de grupo.",
             "damage": 1, "cooldown": 300, "speed": 0, "area": 2.2, "image": "area_giz",
-            "slow": 0.5,
+            "slow": 0.3,
             "per_level": { "area": 0.2, "damage": 1 }
         }
     },

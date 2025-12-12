@@ -156,5 +156,44 @@ class Player(Entity):
         self.input()
         current_speed = self.stats['speed'] * self.modifiers['speed']
         self.move(current_speed * dt)
+        
+        # --- CORREÇÃO DE BORDAS DO MAPA (Baseado no Visual) ---
+        # O mapa é 2x o tamanho da tela (definido no camera.py)
+        map_width = WIDTH * 2
+        map_height = HEIGHT * 2
+        
+        # 1. Checa colisão da IMAGEM (Rect) com as bordas
+        # Se a imagem sair, empurramos ela de volta e atualizamos a hitbox/physics
+        
+        # Esquerda
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.hitbox.centerx = self.rect.centerx
+            self.pos.x = self.hitbox.centerx
+            
+        # Direita
+        elif self.rect.right > map_width:
+            self.rect.right = map_width
+            self.hitbox.centerx = self.rect.centerx
+            self.pos.x = self.hitbox.centerx
+            
+        # Topo
+        if self.rect.top < 0:
+            self.rect.top = 0
+            # A hitbox fica nos pés, então realinhamos ela pela base da imagem
+            self.hitbox.midbottom = self.rect.midbottom 
+            self.pos.y = self.hitbox.centery
+            
+        # Baixo
+        elif self.rect.bottom > map_height:
+            self.rect.bottom = map_height
+            self.hitbox.midbottom = self.rect.midbottom
+            self.pos.y = self.hitbox.centery
+            
+        # Sincronização final para garantir consistência
+        self.hitbox.center = (int(self.pos.x), int(self.pos.y))
+        self.rect.midbottom = self.hitbox.midbottom
+        # -----------------------------------------------------
+
         self.invulnerability_timer()
         self.regen_health(dt)

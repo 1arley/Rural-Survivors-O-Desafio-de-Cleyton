@@ -39,8 +39,19 @@ class MeleeWeapon(Weapon):
         # Base da arma * Modificador do Player
         area = self.data.get('area', 1.0) * self.player.modifiers['area']
         
-        MeleeSprite(
-            self.player, final_dmg, self.data['life'], area,
-            [self.groups['all_sprites'], self.groups['attack_sprites']],
-            self.data.get('image', 'area_giz')
-        )
+        # --- CORREÇÃO DO AMOUNT ---
+        # Adiciona suporte a quantidade (ex: +1 projetil) para armas melee.
+        # Isso cria multiplas instancias do ataque, causando dano múltiplo.
+        amount = 1 + int(self.player.modifiers['amount'])
+        
+        for i in range(amount):
+            # Pequeno offset visual se houver mais de um, para não ficarem 100% sobrepostos
+            # (Opcional, mas ajuda a ver que o upgrade funcionou)
+            # Neste caso, apenas instanciamos. O sistema de colisão do main.py 
+            # trata sprites diferentes como hits diferentes.
+            
+            MeleeSprite(
+                self.player, final_dmg, self.data['life'], area,
+                [self.groups['all_sprites'], self.groups['attack_sprites']],
+                self.data.get('image', 'area_giz')
+            )
